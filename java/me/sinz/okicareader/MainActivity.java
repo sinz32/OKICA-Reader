@@ -43,7 +43,7 @@ public class MainActivity extends Activity {
     private void readOkica(NfcF nf, byte[] IDm) {
         try {
             String sc = b2s(nf.getSystemCode());
-            if (!sc.equals("8FC1")) {
+            if (!sc.equals("8FC1")) {  //OKICA's system code is 0x8FC1
                 txt.setText("Scanned card is not OKICA");
                 return;
             }
@@ -52,6 +52,15 @@ public class MainActivity extends Activity {
             nf.setTimeout(500);
 
             byte[] cmd = s2b("1006" + b2s(IDm) + "018F02018000");
+            //10 06 IDm 018F 02 01 8000"
+            //10 - data length
+            //06 - Read Without Encryption command
+            //IDm - Card's IDm
+            //018F - service code for OKICA history (little endian). Only this value is different from Suica.
+            //01 - block count to be read. I will read only 1 block(usage history).
+            //     Up to 20 usage records are stored in card, but lots of Many apps read 10 at a time, twice.
+            //80 - Block element high byte
+            //00 - block number
             byte[] res = nf.transceive(cmd);
             int balance = toInt(res, 13, 11, 10);
             txt.setText(balance + "円");
